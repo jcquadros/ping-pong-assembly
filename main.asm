@@ -1,4 +1,4 @@
-extern line, circle, full_circle, cursor, caracter
+extern line, circle, full_circle, cursor, caracter, retangle,full_retangle
 
 global cor
 global deltax, deltay, mens
@@ -22,7 +22,7 @@ segment code
    		MOV     	AH,0
     	INT     	10h
 		
-;Desenha retângulo branco no fundo da tela
+; Desenha borda branca superior e inferior da tela
 		MOV byte[cor], branco_intenso
 		MOV AX, 0
 		PUSH AX
@@ -30,9 +30,21 @@ segment code
 		PUSH AX
 		MOV AX, 639
 		PUSH AX
+		MOV AX, 0
+		PUSH AX
+		CALL line
+		
+		MOV AX, 0
+		PUSH AX
 		MOV AX, 479
 		PUSH AX
-		CALL retangle
+		MOV AX, 639
+		PUSH AX
+		MOV AX, 479
+		PUSH AX
+		CALL line
+		
+		CALL desenha_blocos
 		
 ;Desenha circulo vermelho de raio 10 no centro da tela
 		MOV AX, 320                 ; Coordenada inicial X (meio da tela)
@@ -41,7 +53,7 @@ segment code
 		MOV word [ball_y], AX
 		MOV word [direction_x], 1   ; Direção X (movendo para a direita)
 		MOV word [direction_y], 1   ; Direção Y (movendo para cima)
-		MOV word [vel], 3           ; Velocidade da animação
+		MOV word [vel], 1           ; Velocidade da animação
 		
 animacao_loop:
 		; Limpa o círculo anterior
@@ -152,59 +164,80 @@ del1:
 		MOV     AX,4C00h
 		INT     21h
 
-; Draw rectangle border function
-; Params: PUSH x1, y1, x2, y2
-retangle:
-		PUSH	BP
-		MOV		BP,SP
-		PUSHF             		;coloca os flags na pilha
-		PUSH 	AX
-		PUSH 	BX
-		PUSH	CX
-		PUSH	DX
-		PUSH	SI
-		PUSH	DI
+desenha_blocos:
+    ; Configuração inicial
+    MOV word [altura_bloco], 92 ; Altura do bloco
 
-		MOV		AX,[BP+10]    			
-		MOV		BX,[BP+8]    			
-		MOV		CX,[BP+6]    			
-		MOV 	DX,[BP+4]
+    ; Definir espaçamento entre os blocos
+    MOV word [espacamento], 5
 
-		PUSH	AX				; x1 
-		PUSH 	BX				; y1
-		PUSH 	CX				; x2	
-		PUSH 	BX				; y1
-		CALL	line
-		
+    ; Configurar blocos do Jogador 1
+    MOV AX, 0                ; Coordenada inicial X para o Jogador 1
+    MOV word [j1_x1], AX
+    MOV AX, 20               ; Largura do bloco
+    MOV word [j1_x2], AX
+    MOV AX, 0                ; Coordenada inicial Y para o primeiro bloco
+    MOV word [j1_y1], AX
 
-		PUSH	AX				; x1
-		PUSH 	BX				; y1
-		PUSH 	AX				; x1
-		PUSH 	DX				; y2
-		CALL	line
-		
-		PUSH	AX				; x1
-		PUSH 	DX				; y2
-		PUSH 	CX				; x2
-		PUSH 	DX				; y2
-		CALL	line
-		
-		PUSH	CX				; x2
-		PUSH 	DX				; y2
-		PUSH 	CX				; x2
-		PUSH 	BX				; y1
-		CALL	line
-		
+    ; Configurar blocos do Jogador 2
+    MOV AX, 619              ; Coordenada inicial X para o Jogador 2
+    MOV word [j2_x1], AX
+    MOV AX, 639              ; Largura do bloco
+    MOV word [j2_x2], AX
+    MOV AX, 0                ; Coordenada inicial Y para o primeiro bloco
+    MOV word [j2_y1], AX
 
-		POP DI
-		POP SI
-		POP DX
-		POP CX
-		POP BX
-		POP AX
-		POPF
-		POP BP
-		RET 8                     ; Return and clean stack
+    ; Desenhar os blocos do Jogador 1
+    MOV CX, 5                ; Quantidade de blocos
+    MOV byte [cor], magenta  ; Cor dos blocos do Jogador 1
+	
+blocos_j1_loop:
+    ; Calcular Y2 para o bloco atual
+    MOV AX, [j1_y1]
+    ADD AX, [altura_bloco]
+    MOV word [j1_y2], AX
+
+    ; Desenhar bloco
+    PUSH word [j1_x1]
+    PUSH word [j1_y1]
+    PUSH word [j1_x2]
+    PUSH word [j1_y2]
+    CALL full_retangle
+
+    ; Atualizar coordenadas Y para o próximo bloco
+    MOV AX, [j1_y2]
+    ADD AX, [espacamento]
+    MOV word [j1_y1], AX
+
+    LOOP blocos_j1_loop
+
+    ; Desenhar os blocos do Jogador 2
+    MOV CX, 5                ; Quantidade de blocos
+    MOV byte [cor], azul     ; Cor dos blocos do Jogador 2
+blocos_j2_loop:
+    ; Calcular Y2 para o bloco atual
+    MOV AX, [j2_y1]
+    ADD AX, [altura_bloco]
+    MOV word [j2_y2], AX
+
+    ; Desenhar bloco
+    PUSH word [j2_x1]
+    PUSH word [j2_y1]
+    PUSH word [j2_x2]
+    PUSH word [j2_y2]
+    CALL full_retangle
+
+    ; Atualizar coordenadas Y para o próximo bloco
+    MOV AX, [j2_y2]
+    ADD AX, [espacamento]
+    MOV word [j2_y1], AX
+
+    LOOP blocos_j2_loop
+
+    RET
+
+
+
 
 ;*******************************************************************
 segment data
@@ -241,6 +274,24 @@ coluna  		dw  	0
 deltax			dw		0
 deltay			dw		0	
 mens    		db  	'Funcao Grafica'
+
+j1_x1 dw 0
+j1_y1 dw 0
+j1_x2 dw 0
+j1_y2 dw 0
+
+j2_x1 dw 0
+j2_y1 dw 0
+j2_x2 dw 0
+j2_y2 dw 0
+
+altura_bloco dw 0
+espacamento dw 0
+
+; Estado dos blocos (1 = ativo, 0 = destruído)
+j1_status db 1, 1, 1, 1, 1      ; Estado dos blocos do Jogador 1
+j2_status db 1, 1, 1, 1, 1      ; Estado dos blocos do Jogador 2
+
 ;*************************************************************************
 segment stack stack
 	resb	512
