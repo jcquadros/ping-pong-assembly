@@ -31,7 +31,7 @@ segment code
 		PUSH AX
 		MOV AX, 479
 		PUSH AX
-		CALL retangle
+		CALL rectangle
 		
 ;Desenha circulo vermelho de raio 10 no centro da tela
 		MOV AX, 320                   ; Coordenada inicial X (meio da tela)
@@ -666,7 +666,7 @@ fim_line:
 
 ; Draw rectangle border function
 ; Params: PUSH x1, y1, x2, y2
-retangle:
+rectangle:
 		PUSH	BP
 		MOV		BP,SP
 		PUSHF             		;coloca os flags na pilha
@@ -718,7 +718,7 @@ retangle:
 		POP BP
 		RET 8                     ; Return and clean stack
 		
-full_retangle:
+full_rectangle:
 		PUSH	BP
 		MOV		BP,SP
 		PUSHF             		;coloca os flags na pilha
@@ -741,10 +741,10 @@ full_retangle:
 
 swap_y_coordinates:
 		; se y1 > y2, troca
-		JL 		full_retangle_loop
+		JL 		full_rectangle_loop
 		XCHG	BX,DX
 
-full_retangle_loop:
+full_rectangle_loop:
 		; enquanto y1 < y2 escreve a linha horizontal e incrementa y1
 		PUSH	AX				; x1
 		PUSH 	BX				; y1
@@ -753,9 +753,9 @@ full_retangle_loop:
 		CALL	line
 		INC		BX
 		CMP		BX,DX
-		JL		full_retangle_loop
+		JL		full_rectangle_loop
 		
-full_retangle_end:
+full_rectangle_end:
 		POP DI
 		POP SI
 		POP DX

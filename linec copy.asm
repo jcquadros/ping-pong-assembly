@@ -688,7 +688,7 @@ fill_loop_x:                  ; Inner loop for X
 
 ; Draw rectangle border function
 ; Params: PUSH x1, y1, x2, y2
-retangle:
+rectangle:
 		PUSH BP
 		MOV BP, SP
 
