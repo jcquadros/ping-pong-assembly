@@ -53,7 +53,7 @@ segment code
 		MOV word [ball_y], AX
 		MOV word [direction_x], 1   ; Direção X (movendo para a direita)
 		MOV word [direction_y], 1   ; Direção Y (movendo para cima)
-		MOV word [vel], 1           ; Velocidade da animação
+		MOV word [vel], 10           ; Velocidade da animação
 		
 animacao_loop:
 		; Limpa o círculo anterior
@@ -67,39 +67,16 @@ animacao_loop:
 		CALL circle            		; Apaga o círculo
 
 		; Atualiza coordenadas da bola
-		MOV AX, [ball_x]
-		ADD AX, [direction_x]
-		MOV BX, [ball_radius]
-		SUB AX, BX                  ; Subtrai o raio para verificar borda esquerda
-		CMP AX, 1
-		JL inverter_direcao_x       ; Reflete na borda esquerda
+		CALL verifica_colisao       ; Chama a função para verificar colisões
 
+		; Atualiza a posição da bola
 		MOV AX, [ball_x]
 		ADD AX, [direction_x]
-		ADD AX, BX                  ; Adiciona o raio para verificar borda direita
-		CMP AX, 638
-		JG inverter_direcao_x       ; Reflete na borda direita
-
-		MOV AX, [ball_x]
-		ADD AX, [direction_x]
-		MOV [ball_x], AX            ; Atualiza a posição X da bola
+		MOV [ball_x], AX
 
 		MOV AX, [ball_y]
 		ADD AX, [direction_y]
-		MOV BX, [ball_radius]
-		SUB AX, BX                  ; Subtrai o raio para verificar borda superior
-		CMP AX, 1
-		JL inverter_direcao_y       ; Reflete na borda superior
-
-		MOV AX, [ball_y]
-		ADD AX, [direction_y]
-		ADD AX, BX                  ; Adiciona o raio para verificar borda inferior
-		CMP AX, 478
-		JG inverter_direcao_y       ; Reflete na borda inferior
-
-		MOV AX, [ball_y]
-		ADD AX, [direction_y]
-		MOV [ball_y], AX            ; Atualiza a posição Y da bola
+		MOV [ball_y], AX
 
 		; Desenha o novo círculo
 		MOV byte [cor], vermelho
@@ -109,7 +86,7 @@ animacao_loop:
 		PUSH AX
 		MOV AX, [ball_radius]       ; Raio
 		PUSH AX
-		CALL circle            ; Desenha o círculo
+		CALL circle            		; Desenha o círculo
 
 		; Verifica entrada de teclado para sair
 		MOV AH, 0Bh
@@ -119,7 +96,8 @@ animacao_loop:
 		MOV AH, 08h
 		INT 21h
 		CMP AL, 's'
-		JE sair
+		JNE continuar
+		JMP sair
 
 continuar:
 		; Adiciona um pequeno atraso para a animação
@@ -128,11 +106,138 @@ continuar:
 
 inverter_direcao_x:
 		NEG word [direction_x]             ; Inverte a direção em X
-		JMP continuar
+		RET
 
 inverter_direcao_y:
 		NEG word [direction_y]             ; Inverte a direção em Y
-		JMP continuar
+		RET
+
+verifica_colisao:
+    ; Verifica colisão com a borda superior
+    MOV AX, [ball_y]
+    MOV BX, [ball_radius]
+    SUB AX, BX                  ; Posição da bola - Raio
+    CMP AX, 2
+    JL inverter_direcao_y       ; Reflete na borda superior se for menor que 0
+
+    ; Verifica colisão com a borda inferior
+    MOV AX, [ball_y]
+    ADD AX, [ball_radius]
+    CMP AX, 477
+	JNG verifica_colisao_esquerda ;
+    JMP inverter_direcao_y       ; Reflete na borda inferior se for maior que 479
+
+verifica_colisao_esquerda:
+    ; Verifica colisão com a borda lateral esquerda
+    MOV AX, [ball_x]
+    MOV BX, [ball_radius]
+    SUB AX, BX                  ; Posição da bola - Raio
+    CMP AX, 0
+	JNL verifica_colisao_direita ;
+	JMP game_over				; Para o jogo em caso de colisão com a lateral
+    
+verifica_colisao_direita:
+    ; Verifica colisão com a borda lateral direita
+    MOV AX, [ball_x]
+    ADD AX, [ball_radius]
+    CMP AX, 639
+	JNG verifica_j1 ;
+	JMP game_over				; Para o jogo em caso de colisão com a lateral
+
+verifica_j1:
+    ; Verifica colisão com os blocos do Jogador 1
+    MOV CX, 5                  ; Quantidade de blocos
+    MOV SI, j1_blocos          ; Apontar para a tabela de blocos
+    MOV DI, j1_status          ; Apontar para o estado dos blocos
+verifica_j1_loop:
+    CMP byte [DI], 0           ; Verifica se o bloco está destruído
+    JE bloco_proximo_j1
+
+    ; Verifica colisão com o bloco atual
+    MOV AX, [ball_x]
+	SUB AX, [ball_radius]
+    MOV BX, [SI]               ; x1 do bloco
+    CMP AX, BX
+    JL bloco_proximo_j1        ; Se a bola está antes do bloco, pula
+
+    MOV BX, [SI+4]             ; x2 do bloco
+    CMP AX, BX
+    JG bloco_proximo_j1        ; Se a bola está depois do bloco, pula
+
+    MOV AX, [ball_y]
+    MOV BX, [SI+2]             ; y1 do bloco
+    CMP AX, BX
+    JL bloco_proximo_j1        ; Se a bola está antes do bloco, pula
+
+    MOV BX, [SI+6]             ; y2 do bloco
+    CMP AX, BX
+    JG bloco_proximo_j1        ; Se a bola está depois do bloco, pula
+
+    ; Colisão com bloco detectada
+    MOV byte [DI], 0           ; Marca o bloco como destruído
+    MOV byte [cor], preto
+    PUSH word [SI]             ; x1
+    PUSH word [SI+2]           ; y1
+    PUSH word [SI+4]           ; x2
+    PUSH word [SI+6]           ; y2
+    CALL full_retangle         ; Pinta o bloco de preto
+    CALL inverter_direcao_x    ; Inverte a direção da bola em X
+    RET
+
+bloco_proximo_j1:
+    ADD SI, 8                  ; Avança para o próximo conjunto de coordenadas
+    INC DI                     ; Avança para o próximo estado
+    LOOP verifica_j1_loop           ; Repetir para os blocos restantes
+
+    ; Verifica colisão com os blocos do Jogador 2
+    MOV CX, 5                  ; Quantidade de blocos
+    MOV SI, j2_blocos          ; Apontar para a tabela de blocos
+    MOV DI, j2_status          ; Apontar para o estado dos blocos
+verifica_j2_loop:
+    CMP byte [DI], 0           ; Verifica se o bloco está destruído
+    JE bloco_proximo_j2
+
+    ; Verifica colisão com o bloco atual
+    MOV AX, [ball_x]
+	ADD AX, [ball_radius]
+    MOV BX, [SI]               ; x1 do bloco
+    CMP AX, BX
+    JL bloco_proximo_j2        ; Se a bola está antes do bloco, pula
+
+    MOV BX, [SI+4]             ; x2 do bloco
+    CMP AX, BX
+    JG bloco_proximo_j2        ; Se a bola está depois do bloco, pula
+
+    MOV AX, [ball_y]
+    MOV BX, [SI+2]             ; y1 do bloco
+    CMP AX, BX
+    JL bloco_proximo_j2        ; Se a bola está antes do bloco, pula
+
+    MOV BX, [SI+6]             ; y2 do bloco
+    CMP AX, BX
+    JG bloco_proximo_j2        ; Se a bola está depois do bloco, pula
+
+    ; Colisão com bloco detectada
+    MOV byte [DI], 0           ; Marca o bloco como destruído
+    MOV byte [cor], preto
+    PUSH word [SI]             ; x1
+    PUSH word [SI+2]           ; y1
+    PUSH word [SI+4]           ; x2
+    PUSH word [SI+6]           ; y2
+    CALL full_retangle         ; Pinta o bloco de preto
+    CALL inverter_direcao_x    ; Inverte a direção da bola em X
+    RET
+
+bloco_proximo_j2:
+    ADD SI, 8                  ; Avança para o próximo conjunto de coordenadas
+    INC DI                     ; Avança para o próximo estado
+    LOOP verifica_j2_loop           ; Repetir para os blocos restantes
+
+    RET
+
+game_over:
+    ; Pausa a animação
+    HLT                        ; Simplesmente para o programa
 
 sair:
 		; Restaura o modo de vídeo original e finaliza o programa
@@ -164,77 +269,42 @@ del1:
 		MOV     AX,4C00h
 		INT     21h
 
+
 desenha_blocos:
-    ; Configuração inicial
-    MOV word [altura_bloco], 92 ; Altura do bloco
-
-    ; Definir espaçamento entre os blocos
-    MOV word [espacamento], 5
-
-    ; Configurar blocos do Jogador 1
-    MOV AX, 0                ; Coordenada inicial X para o Jogador 1
-    MOV word [j1_x1], AX
-    MOV AX, 20               ; Largura do bloco
-    MOV word [j1_x2], AX
-    MOV AX, 0                ; Coordenada inicial Y para o primeiro bloco
-    MOV word [j1_y1], AX
-
-    ; Configurar blocos do Jogador 2
-    MOV AX, 619              ; Coordenada inicial X para o Jogador 2
-    MOV word [j2_x1], AX
-    MOV AX, 639              ; Largura do bloco
-    MOV word [j2_x2], AX
-    MOV AX, 0                ; Coordenada inicial Y para o primeiro bloco
-    MOV word [j2_y1], AX
-
     ; Desenhar os blocos do Jogador 1
-    MOV CX, 5                ; Quantidade de blocos
-    MOV byte [cor], magenta  ; Cor dos blocos do Jogador 1
-	
+    MOV CX, 5                    ; Quantidade de blocos
+    MOV SI, j1_blocos            ; Apontar para a tabela de blocos do Jogador 1
+    MOV byte [cor], magenta      ; Cor dos blocos do Jogador 1
 blocos_j1_loop:
-    ; Calcular Y2 para o bloco atual
-    MOV AX, [j1_y1]
-    ADD AX, [altura_bloco]
-    MOV word [j1_y2], AX
-
-    ; Desenhar bloco
-    PUSH word [j1_x1]
-    PUSH word [j1_y1]
-    PUSH word [j1_x2]
-    PUSH word [j1_y2]
+    ; Desenhar bloco atual
+    PUSH word [SI]               ; x1
+    PUSH word [SI+2]             ; y1
+    PUSH word [SI+4]             ; x2
+    PUSH word [SI+6]             ; y2
     CALL full_retangle
 
-    ; Atualizar coordenadas Y para o próximo bloco
-    MOV AX, [j1_y2]
-    ADD AX, [espacamento]
-    MOV word [j1_y1], AX
-
-    LOOP blocos_j1_loop
+    ; Avançar para o próximo bloco
+    ADD SI, 8                    ; Avançar para o próximo conjunto de coordenadas
+    LOOP blocos_j1_loop          ; Repetir para todos os blocos do Jogador 1
 
     ; Desenhar os blocos do Jogador 2
-    MOV CX, 5                ; Quantidade de blocos
-    MOV byte [cor], azul     ; Cor dos blocos do Jogador 2
+    MOV CX, 5                    ; Quantidade de blocos
+    MOV SI, j2_blocos            ; Apontar para a tabela de blocos do Jogador 2
+    MOV byte [cor], azul         ; Cor dos blocos do Jogador 2
 blocos_j2_loop:
-    ; Calcular Y2 para o bloco atual
-    MOV AX, [j2_y1]
-    ADD AX, [altura_bloco]
-    MOV word [j2_y2], AX
-
-    ; Desenhar bloco
-    PUSH word [j2_x1]
-    PUSH word [j2_y1]
-    PUSH word [j2_x2]
-    PUSH word [j2_y2]
+    ; Desenhar bloco atual
+    PUSH word [SI]               ; x1
+    PUSH word [SI+2]             ; y1
+    PUSH word [SI+4]             ; x2
+    PUSH word [SI+6]             ; y2
     CALL full_retangle
 
-    ; Atualizar coordenadas Y para o próximo bloco
-    MOV AX, [j2_y2]
-    ADD AX, [espacamento]
-    MOV word [j2_y1], AX
-
-    LOOP blocos_j2_loop
+    ; Avançar para o próximo bloco
+    ADD SI, 8                    ; Avançar para o próximo conjunto de coordenadas
+    LOOP blocos_j2_loop          ; Repetir para todos os blocos do Jogador 2
 
     RET
+
 
 
 
@@ -275,16 +345,18 @@ deltax			dw		0
 deltay			dw		0	
 mens    		db  	'Funcao Grafica'
 
-j1_x1 dw 0
-j1_y1 dw 0
-j1_x2 dw 0
-j1_y2 dw 0
+j1_blocos 	dw 0, 0, 20, 92       ; x1, y1, x2, y2 (Bloco 1)
+           	dw 0, 97, 20, 189    ; Bloco 2
+           	dw 0, 194, 20, 286   ; Bloco 3
+           	dw 0, 291, 20, 383   ; Bloco 4
+           	dw 0, 388, 20, 480   ; Bloco 5
 
-j2_x1 dw 0
-j2_y1 dw 0
-j2_x2 dw 0
-j2_y2 dw 0
-
+; Coordenadas dos blocos do Jogador 2
+j2_blocos 	dw 619, 0, 639, 92    ; x1, y1, x2, y2 (Bloco 1)
+           	dw 619, 97, 639, 189 ; Bloco 2
+           	dw 619, 194, 639, 286; Bloco 3
+           	dw 619, 291, 639, 383; Bloco 4
+           	dw 619, 388, 639, 480; Bloco 5
 altura_bloco dw 0
 espacamento dw 0
 
