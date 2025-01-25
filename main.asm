@@ -1,6 +1,5 @@
-extern line, circle, full_circle, cursor, caracter, rectangle,full_rectangle, desenha_bordas , desenha_blocos_j1, desenha_blocos_j2, desenha_raquete_j1, desenha_raquete_j2, move_raquete_j1_cima, move_raquete_j1_baixo, move_raquete_j2_cima, move_raquete_j2_baixo, desenha_bola
-global cor,  j1_blocos, j2_blocos, j1_raquete, j2_raquete, ball_x, ball_y, ball_radius
-global deltax, deltay, mens
+extern line, circle, full_circle, cursor, caracter, rectangle,full_rectangle, desenha_bordas , desenha_blocos, desenha_raquete, move_raquete_cima, move_raquete_baixo, desenha_bola, verifica_colisao
+global cor,  j1_blocos, j2_blocos, j1_raquete, j2_raquete, ball_x, ball_y, ball_radius, direction_x, direction_y, j1_status, j2_status, game_over, deltax, deltay, mens
 
 segment code
 ..start:
@@ -37,9 +36,11 @@ segment code
 	MOV byte [cor], branco_intenso
 	CALL desenha_bordas
 	MOV byte [cor], magenta
-	CALL desenha_blocos_j1
+	MOV SI, j1_blocos
+	CALL desenha_blocos
 	MOV byte [cor], azul
-	CALL desenha_blocos_j2
+	MOV SI, j2_blocos
+	CALL desenha_blocos
 
 ; Loop da animacao da bolinha na tela		
 animacao_loop:
@@ -47,6 +48,7 @@ animacao_loop:
 	MOV byte [cor], preto
 	CALL desenha_bola           		
 
+	MOV byte [cor], preto
 	CALL verifica_colisao       ; Chama a função para verificar colisões
 
 	; Atualiza a posição da bola
@@ -64,9 +66,11 @@ animacao_loop:
 	
 	; Desenha as raquetes
 	MOV byte [cor], magenta
-	CALL desenha_raquete_j1
+	MOV SI, j1_raquete
+	CALL desenha_raquete
 	MOV byte [cor], azul
-	CALL desenha_raquete_j2
+	MOV SI, j2_raquete
+	CALL desenha_raquete
 	
 	; Verifica se há uma tecla pressionada
 	MOV     AX, [p_i]
@@ -74,6 +78,7 @@ animacao_loop:
 	JNE    eh_tecla_pressionada ; Se há tecla pressionada, verifica qual foi
     JMP      continuar_animacao ; Se não há tecla pressionada, continua a animação
 
+; Verifica qual tecla foi pressionada
 eh_tecla_pressionada:
     INC     word [p_t]
     AND     word [p_t], 7
@@ -129,7 +134,8 @@ w:
 	JMP continuar_animacao
 w_jogando:
 	MOV byte [cor], preto
-	CALL move_raquete_j1_cima
+	MOV SI, j1_raquete
+	CALL move_raquete_cima
 	JMP continuar_animacao
 s:
 	; Verifica se a tecla pressionada foi 's'
@@ -140,7 +146,8 @@ s:
 	JMP continuar_animacao
 s_jogando:
 	MOV byte [cor], preto
-	CALL move_raquete_j1_baixo
+	MOV SI, j1_raquete
+	CALL move_raquete_baixo
 	JMP continuar_animacao
 
 seta_cima:	
@@ -152,7 +159,8 @@ seta_cima:
 	JMP continuar_animacao
 seta_cima_jogando:	
 	MOV byte [cor], preto
-	CALL move_raquete_j2_cima
+	MOV SI, j2_raquete
+	CALL move_raquete_cima
 	JMP continuar_animacao
 
 seta_baixo:
@@ -164,7 +172,8 @@ seta_baixo:
 	JMP continuar_animacao
 seta_baixo_jogando:
 	MOV byte [cor], preto
-	CALL move_raquete_j2_baixo
+	MOV SI, j2_raquete
+	CALL move_raquete_baixo
 	JMP continuar_animacao
 
 continuar_animacao:
@@ -188,250 +197,8 @@ sair:
     MOV AX, 4C00h
     INT 21h
 
-inverter_direcao_x:
-	NEG word [direction_x]             ; Inverte a direção em X
-	RET
-
-inverter_direcao_y:
-	NEG word [direction_y]             ; Inverte a direção em Y
-	RET
-
-verifica_colisao:
-    ; Verifica colisão com a borda superior
-    MOV AX, [ball_y]
-    MOV BX, [ball_radius]
-    SUB AX, BX                  		; Posição da bola - Raio
-    CMP AX, 2
-    JL inverter_direcao_y       		; Reflete na borda superior se for menor que 0
-
-    ; Verifica colisão com a borda inferior
-    MOV AX, [ball_y]
-    ADD AX, [ball_radius]
-    CMP AX, 477
-	JNG verifica_colisao_esquerda ;
-    JMP inverter_direcao_y       		; Reflete na borda inferior se for maior que 479
-
-verifica_colisao_esquerda:
-    ; Verifica colisão com a borda lateral esquerda
-    MOV AX, [ball_x]
-    MOV BX, [ball_radius]
-    SUB AX, BX                  		; Posição da bola - Raio
-    CMP AX, 0
-	JNL verifica_colisao_direita 		; Se não colidiu com a lateral esquerda, verifica a direita
-	JMP game_over						; Para o jogo em caso de colisão com a lateral
-    
-verifica_colisao_direita:
-    ; Verifica colisão com a borda lateral direita
-    MOV AX, [ball_x]
-    ADD AX, [ball_radius]
-    CMP AX, 639
-	JNG verifica_colisao_raquete_j1 			; Se não colidiu com a lateral direita, verifica os blocos do Jogador 1
-	JMP game_over						; Para o jogo em caso de colisão com a lateral
-
-verifica_colisao_raquete_j1:
-    ; Verifica colisão com a raquete do Jogador 1
-	MOV AX, [ball_x]
-	ADD AX, [ball_radius]
-    MOV BX, [j1_raquete]             			; x1 do bloco
-    CMP AX, BX
-    JL verifica_colisao_blocos_j1       	; Se a bola está antes do bloco, pula
-
-	MOV AX, [ball_x]
-	SUB AX, [ball_radius]
-    MOV BX, [j1_raquete+4]             			; x2 do bloco
-    CMP AX, BX
-    JG verifica_colisao_blocos_j1            	; Se a bola está depois do bloco, pula
-
-    MOV AX, [ball_y]
-	ADD AX, [ball_radius]
-    MOV BX, [j1_raquete+2]             			; y1 do bloco
-    CMP AX, BX
-    JL verifica_colisao_blocos_j1            	; Se a bola está antes do bloco, pula
-	JE colisao_raquete_y_j1
-
-	MOV AX, [ball_y]
-	SUB AX, [ball_radius]
-    MOV BX, [j1_raquete+6]             			; y2 do bloco
-    CMP AX, BX
-    JG verifica_colisao_blocos_j1            	; Se a bola está depois do bloco, pula
-	JE colisao_raquete_y_j1
-	
-	CALL inverter_direcao_x
-	JMP fim_verifica_colisao_j1
-
-colisao_raquete_y_j1:
-	CALL inverter_direcao_y
-    JMP fim_verifica_colisao_j1         ; Pula para o final da sub-rotina
-
-verifica_colisao_blocos_j1:
-    ; Verifica colisão com os blocos do Jogador 1
-    MOV CX, 5                  ; Quantidade de blocos
-    MOV SI, j1_blocos          ; Apontar para a tabela de blocos
-    MOV DI, j1_status          ; Apontar para o estado dos blocos
-verifica_colisao_j1_loop:
-    CMP byte [DI], 0           ; Verifica se o bloco está destruído
-    JE avanca_proximo_bloco_j1
-
-    ; Verifica colisão com o bloco atual
-    MOV AX, [ball_x]
-	ADD AX, [ball_radius]
-    MOV BX, [SI]               			; x1 do bloco
-    CMP AX, BX
-    JL avanca_proximo_bloco_j1       	; Se a bola está antes do bloco, pula
-
-	MOV AX, [ball_x]
-	SUB AX, [ball_radius]
-    MOV BX, [SI+4]             			; x2 do bloco
-    CMP AX, BX
-    JG avanca_proximo_bloco_j1        	; Se a bola está depois do bloco, pula
-
-    MOV AX, [ball_y]
-	ADD AX, [ball_radius]
-    MOV BX, [SI+2]             			; y1 do bloco
-    CMP AX, BX
-    JL avanca_proximo_bloco_j1        	; Se a bola está antes do bloco, pula
-	JE colisao_bloco_y_j1
-
-	MOV AX, [ball_y]
-	SUB AX, [ball_radius]
-    MOV BX, [SI+6]             			; y2 do bloco
-    CMP AX, BX
-    JG avanca_proximo_bloco_j1        	; Se a bola está depois do bloco, pula
-	JE colisao_bloco_y_j1
-
-    ; Colisão com bloco detectada
-    MOV byte [DI], 0           ; Marca o bloco como destruído
-    MOV byte [cor], preto
-    PUSH word [SI]             ; x1
-    PUSH word [SI+2]           ; y1
-    PUSH word [SI+4]           ; x2
-    PUSH word [SI+6]           ; y2
-    CALL rectangle         ; Pinta o bloco de preto
-    CALL inverter_direcao_x    ; Inverte a direção da bola em X
-fim_verifica_colisao_j1:
-    JMP verifica_colisao_raquete_j2
-
-colisao_bloco_y_j1:
-	MOV byte [DI], 0           ; Marca o bloco como destruído
-    MOV byte [cor], preto
-    PUSH word [SI]             ; x1
-    PUSH word [SI+2]           ; y1
-    PUSH word [SI+4]           ; x2
-    PUSH word [SI+6]           ; y2
-    CALL rectangle    
-	CALL inverter_direcao_y
-	JMP fim_verifica_colisao_j1         ; Pula para o final da sub-rotina
-
-avanca_proximo_bloco_j1:
-    ADD SI, 8                  ; Avança para o próximo conjunto de coordenadas
-    INC DI                     ; Avança para o próximo estado
-    LOOP verifica_colisao_j1_loop           ; Repetir para os blocos restantes
-
-verifica_colisao_raquete_j2:
-	; Verifica colisão com a raquete do Jogador 2
-	MOV AX, [ball_x]
-	ADD AX, [ball_radius]
-	MOV BX, [j2_raquete]             			; x1 do bloco
-	CMP AX, BX
-	JL verifica_colisao_blocos_j2       	; Se a bola está antes do bloco, pula
-	
-	MOV AX, [ball_x]
-	SUB AX, [ball_radius]
-	MOV BX, [j2_raquete+4]             			; x2 do bloco
-	CMP AX, BX
-	JG verifica_colisao_blocos_j2            	; Se a bola está depois do bloco, pula
-
-	MOV AX, [ball_y]
-	ADD AX, [ball_radius]
-	MOV BX, [j2_raquete+2]             			; y1 do bloco
-	CMP AX, BX
-	JL verifica_colisao_blocos_j2            	; Se a bola está antes do bloco, pula
-	JE colisao_raquete_y_j2
-
-	MOV AX, [ball_y]
-	SUB AX, [ball_radius]
-	MOV BX, [j2_raquete+6]             			; y2 do bloco
-	CMP AX, BX
-	JG verifica_colisao_blocos_j2            	; Se a bola está depois do bloco, pula
-	JE colisao_raquete_y_j2
-
-	CALL inverter_direcao_x
-	JMP fim_verifica_colisao_j2
-
-colisao_raquete_y_j2:
-	CALL inverter_direcao_y
-	JMP fim_verifica_colisao_j2         ; Pula para o final da sub-rotina
-
-verifica_colisao_blocos_j2:
-	; Verifica colisão com os blocos do Jogador 2
-	MOV CX, 5                  ; Quantidade de blocos
-	MOV SI, j2_blocos          ; Apontar para a tabela de blocos
-	MOV DI, j2_status          ; Apontar para o estado dos blocos
-verifica_colisao_j2_loop:
-
-	CMP byte [DI], 0           ; Verifica se o bloco está destruído
-	JE avanca_proximo_bloco_j2
-
-	; Verifica colisão com o bloco atual
-	MOV AX, [ball_x]
-	ADD AX, [ball_radius]
-	MOV BX, [SI]               			; x1 do bloco
-	CMP AX, BX
-	JL avanca_proximo_bloco_j2       	; Se a bola está antes do bloco, pula
-
-	MOV AX, [ball_x]
-	SUB AX, [ball_radius]
-	MOV BX, [SI+4]             			; x2 do bloco
-	CMP AX, BX
-	JG avanca_proximo_bloco_j2        	; Se a bola está depois do bloco, pula
-
-	MOV AX, [ball_y]
-	ADD AX, [ball_radius]
-	MOV BX, [SI+2]             			; y1 do bloco
-	CMP AX, BX
-	JL avanca_proximo_bloco_j2        	; Se a bola está antes do bloco, pula
-	JE colisao_bloco_y_j2
-
-	MOV AX, [ball_y]
-	SUB AX, [ball_radius]
-	MOV BX, [SI+6]             			; y2 do bloco
-	CMP AX, BX
-	JG avanca_proximo_bloco_j2        	; Se a bola está depois do bloco, pula
-	JE colisao_bloco_y_j2
-
-	; Colisão com bloco detectada
-	MOV byte [DI], 0           ; Marca o bloco como destruído
-	MOV byte [cor], preto
-	PUSH word [SI]             ; x1
-	PUSH word [SI+2]           ; y1
-	PUSH word [SI+4]           ; x2
-	PUSH word [SI+6]           ; y2
-	CALL rectangle         ; Pinta o bloco de preto
-	CALL inverter_direcao_x    ; Inverte a direção da bola em X
-
-fim_verifica_colisao_j2:
-	RET
-
-colisao_bloco_y_j2:
-	MOV byte [DI], 0           ; Marca o bloco como destruído
-	MOV byte [cor], preto
-	PUSH word [SI]             ; x1
-	PUSH word [SI+2]           ; y1
-	PUSH word [SI+4]           ; x2
-	PUSH word [SI+6]           ; y2
-	CALL rectangle    
-	CALL inverter_direcao_y
-	JMP fim_verifica_colisao_j2         ; Pula para o final da sub-rotina
-
-avanca_proximo_bloco_j2:
-    ADD SI, 8                  ; Avança para o próximo conjunto de coordenadas
-    INC DI                     ; Avança para o próximo estado
-    LOOP verifica_colisao_j2_loop           ; Repetir para os blocos restantes
-	RET
-
 game_over:
-    ; Pausa a animação
-    HLT                        ; Simplesmente para o programa
+    ; TODO: Implementar a mensagem de game over e perguntar se deseja jogar novamente
 	CALL sair
 
 ; Função de atraso (delay)
@@ -446,8 +213,6 @@ del1:
 	LOOP del2
 	RET
 
-
-
 	MOV    	AH,08h
 	INT     21h
 	MOV  	AH,0   				; set video mode
@@ -457,25 +222,23 @@ del1:
 	INT     21h
 
 keyINT:									; Este segmento de código só será executado se uma tecla for presionada, ou seja, se a INT 9h for acionada!
-        PUSH    AX						; Salva contexto na pilha
+        PUSH    AX						
         PUSH    BX
         PUSH    DS
- ;       MOV     AX,data					; Carrega em AX o endereço de "data" -> Região do código onde encontra-se o segemeto de dados "Segment data" 			
- ;       MOV     DS,AX					; Atualiza registrador de segmento de dados DS, isso pode ser feito no inicio do programa!
-        IN      AL, kb_data				; Le a porta 60h, que é onde está o byte do Make/Break da tecla. Esse valor é fornecido pelo chip "8255 PPI"
-        INC     word [p_i]				; Incrementa p_i para indicar no loop principal que uma tecla foi acionada!
+        IN      AL, kb_data				
+        INC     word [p_i]				
         AND     word [p_i],7			
-        MOV     BX,[p_i]				; Carrega p_i em BX
-        MOV     [BX+tecla],al			; Transfere o valor Make/Break da tecla armacenado em AL "linha 84" para o segmento de dados com offset DX, na variável "tecla"
-        IN      AL, kb_ctl				; Le porta 61h, pois o bit mais significativo "bit 7" 
-        OR      AL, 80h					; Faz operação lógica OR com o bit mais significativo do registrador AL (1XXXXXXX) -> Valor lido da porta 61h 
-        OUT     kb_ctl, AL				; Seta o bit mais significativo da porta 61h
-        AND     AL, 7Fh					; Restablece o valor do bit mais significativo do registrador AL (0XXXXXXX), alterado na linha 90 	
-        OUT     kb_ctl, AL				; Reinicia o registrador de dislocamento 74LS322 e Livera a interrupção "CLR do flip-flop 7474". O 8255 - Programmable Peripheral Interface (PPI) fica pronto para recever um outro código da tecla https://es.wikipedia.org/wiki/INTel_8255
-        MOV     AL, eoi					; Carrega o AL com a byte de End of Interruption, -> 20h por default
-        OUT     pictrl, AL				; Livera o PIC
+        MOV     BX,[p_i]				
+        MOV     [BX+tecla],al			
+        IN      AL, kb_ctl				
+        OR      AL, 80h					
+        OUT     kb_ctl, AL				
+        AND     AL, 7Fh					
+        OUT     kb_ctl, AL				
+        MOV     AL, eoi					
+        OUT     pictrl, AL				
         
-		POP     DS						; Reestablece os registradores salvos na linha 79 
+		POP     DS						
         POP     BX
         POP     AX
         IRET
@@ -522,14 +285,14 @@ j1_blocos 	dw 0, 0, 20, 92       ; x1, y1, x2, y2 (Bloco 1)
            	dw 0, 97, 20, 189    ; Bloco 2
            	dw 0, 194, 20, 286   ; Bloco 3
            	dw 0, 291, 20, 383   ; Bloco 4
-           	dw 0, 388, 20, 480   ; Bloco 5
+           	dw 0, 388, 20, 479   ; Bloco 5
 
 ; Coordenadas dos blocos do Jogador 2
 j2_blocos 	dw 619, 0, 639, 92    ; x1, y1, x2, y2 (Bloco 1)
            	dw 619, 97, 639, 189 ; Bloco 2
            	dw 619, 194, 639, 286; Bloco 3
            	dw 619, 291, 639, 383; Bloco 4
-           	dw 619, 388, 639, 480; Bloco 5
+           	dw 619, 388, 639, 479; Bloco 5
 
 j1_raquete dw  22, 194, 42, 286
 j2_raquete dw 597, 194, 617, 286

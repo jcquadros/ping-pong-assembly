@@ -7,8 +7,10 @@ CALL NASM frect
 CALL NASM cursor
 CALL NASM caracter
 CALL NASM plot_xy
-CALL NASM screen
+CALL NASM jogador
 CALL NASM bola
-CALL FREELINK main line fcircle circle cursor caracter plot_xy rect frect screen bola
+CALL NASM colisao
+CALL NASM tela
+CALL FREELINK main line fcircle circle cursor caracter plot_xy rect frect jogador bola colisao tela
 
 

@@ -6,7 +6,7 @@ desenha_bola:
 	PUSH AX
 	MOV AX, [ball_y]
 	PUSH AX
-	MOV AX, [ball_radius]       ; Raio
+	MOV AX, [ball_radius]       
 	PUSH AX
-	CALL circle             ; Desenha a bola
+	CALL circle             
     RET

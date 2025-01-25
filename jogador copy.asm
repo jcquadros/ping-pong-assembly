@@ -1,31 +1,6 @@
-extern line, rectangle, cor, j1_blocos, j2_blocos, j1_raquete, j2_raquete
-global desenha_bordas, desenha_blocos_j1, desenha_blocos_j2, desenha_raquete_j1, desenha_raquete_j2, move_raquete_j1_cima, move_raquete_j1_baixo, move_raquete_j2_cima, move_raquete_j2_baixo
+extern  rectangle, cor, j1_blocos, j2_blocos, j1_raquete, j2_raquete
+global desenha_blocos_j1, desenha_blocos_j2, desenha_raquete_j1, desenha_raquete_j2, move_raquete_j1_cima, move_raquete_j1_baixo, move_raquete_j2_cima, move_raquete_j2_baixo
 
-
-desenha_bordas:
-; Desenha borda branca superior e inferior da tela
-		MOV AX, 0
-		PUSH AX
-		MOV AX, 0
-		PUSH AX
-		MOV AX, 639
-		PUSH AX
-		MOV AX, 0
-		PUSH AX
-		CALL line
-		
-		MOV AX, 0
-		PUSH AX
-		MOV AX, 479
-		PUSH AX
-		MOV AX, 639
-		PUSH AX
-		MOV AX, 479
-		PUSH AX
-		CALL line
-        
-        RET
-		
 
 desenha_blocos_j1:
     ; Desenha os blocos do Jogador 1
@@ -64,25 +39,25 @@ blocos_j2_loop:
     RET
 
 desenha_raquete_j1:
-    MOV AX, [j1_raquete]
+    MOV AX, [j1_raquete]    ; X1
 	PUSH AX
-	MOV AX, [j1_raquete+2]
+	MOV AX, [j1_raquete+2]  ; Y1
 	PUSH AX
-	MOV AX, [j1_raquete+4]
+	MOV AX, [j1_raquete+4]  ; X2
 	PUSH AX
-	MOV AX, [j1_raquete+6]
+	MOV AX, [j1_raquete+6]  ; Y2
 	PUSH AX
 	CALL rectangle
     RET
 
 desenha_raquete_j2:
-    MOV AX, [j2_raquete]
+    MOV AX, [j2_raquete]    ; X1
     PUSH AX
-    MOV AX, [j2_raquete+2]
+    MOV AX, [j2_raquete+2]  ; Y1
     PUSH AX
-    MOV AX, [j2_raquete+4]
+    MOV AX, [j2_raquete+4]  ; X2
     PUSH AX
-    MOV AX, [j2_raquete+6]
+    MOV AX, [j2_raquete+6]  ; Y2
     PUSH AX
     CALL rectangle
     RET
