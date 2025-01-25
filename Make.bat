@@ -8,6 +8,7 @@ CALL NASM cursor
 CALL NASM caracter
 CALL NASM plot_xy
 CALL NASM screen
-CALL FREELINK main line fcircle circle cursor caracter plot_xy rect frect screen
+CALL NASM bola
+CALL FREELINK main line fcircle circle cursor caracter plot_xy rect frect screen bola
 
 
