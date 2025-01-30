@@ -1,5 +1,5 @@
 global verifica_colisao, inverter_direcao_x, inverter_direcao_y
-extern line, rectangle, cor, j1_blocos, j2_blocos, j1_raquete, j2_raquete, j1_status, j2_status, ball_x, ball_y, ball_radius, direction_x, direction_y, game_over, desenha_bloco
+extern line, rectangle, cor, j1_blocos, j2_blocos, j1_raquete, j2_raquete, j1_status, j2_status, ball_x, ball_y, ball_radius, direction_x, direction_y, desenha_bloco, game_over
 
 ; Inverte direção X
 inverter_direcao_x:
@@ -29,7 +29,7 @@ verifica_colisao_esquerda:
     SUB AX, [ball_radius]                  		
     CMP AX, 0
 	JG verifica_colisao_direita 		; Se não colidiu com a lateral esquerda, verifica a direita
-	JMP game_over						; Para o jogo em caso de colisão com a lateral
+    JMP game_over                          ; Define um valor de retorno indicando colisão com a lateral
     
 verifica_colisao_direita:
     ; Verifica colisão com a borda lateral direita
@@ -37,7 +37,7 @@ verifica_colisao_direita:
     ADD AX, [ball_radius]
     CMP AX, 639
 	JL verifica_raquetes 			    ; Se não colidiu com a lateral direita, verifica as raquetes
-	JMP game_over	
+	JMP game_over                         ; Define um valor de retorno indicando colisão com a lateral
 
 verifica_raquetes:
     ; Verifica colisão com as raquetes dos dois jogadores
@@ -58,33 +58,33 @@ verifica_raquetes:
 verifica_colisao_raquete:
     ; Verifica colisão com uma raquete
     ; SI = raquete
-    MOV AX, [ball_x]
-    ADD AX, [ball_radius]
-    CMP AX, [SI]
-    JL no_colision
-
-    MOV AX, [ball_x]
-    SUB AX, [ball_radius]
-    CMP AX, [SI+4]
-    JG no_colision
-
     MOV AX, [ball_y]
     ADD AX, [ball_radius]
     CMP AX, [SI+2]
     JL no_colision
-    JE colisao_raquete_y
 
     MOV AX, [ball_y]
     SUB AX, [ball_radius]
     CMP AX, [SI+6]
     JG no_colision
-    JE colisao_raquete_y
+   
+    MOV AX, [ball_x]
+    ADD AX, [ball_radius]
+    CMP AX, [SI]
+    JL no_colision
+    JE colisao_raquete_x 
 
-    CALL inverter_direcao_x
+    MOV AX, [ball_x]
+    SUB AX, [ball_radius]
+    CMP AX, [SI+4]
+    JG no_colision
+    JE colisao_raquete_x 
+
+    CALL inverter_direcao_y
     RET
 
-colisao_raquete_y:
-    CALL inverter_direcao_y
+colisao_raquete_x:
+    CALL inverter_direcao_x
 no_colision:
     RET
 

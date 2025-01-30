@@ -14,9 +14,14 @@ desenha_bloco:
 desenha_blocos:
     ; Função genérica para desenhar múltiplos blocos
     ; SI deve conter o endereço da tabela de blocos
+    ; DI deve conter o endereço da tabela de estados dos blocos
     MOV CX, 5                   ; Quantidade de blocos
 desenha_blocos_loop:
+    CMP byte [DI], 0            ; Verifica se o bloco está destruído
+    JE desenha_blocos_avanca    ; Se destruído, pula para o próximo bloco
     CALL desenha_bloco          ; Desenha o bloco atual
+desenha_blocos_avanca:
+    INC DI                      ; Avança para o próximo estado
     ADD SI, 8                   ; Avança para o próximo bloco (8 bytes por bloco)
     LOOP desenha_blocos_loop    ; Repetir para todos os blocos
     RET
@@ -33,13 +38,13 @@ move_raquete_cima:
     CALL desenha_raquete        ; Apaga a raquete atual
 
     MOV AX, [SI+6]              ; Y2 (Coordenada superior)
-    ADD AX, 5
+    ADD AX, 2
     CMP AX, 479
     JG move_raquete_cima_fim    ; Se ultrapassar o limite, sai
     MOV [SI+6], AX              ; Atualiza Y2
     
     MOV AX, [SI+2]              ; Y1
-    ADD AX, 5
+    ADD AX, 2
     MOV [SI+2], AX              ; Atualiza Y1
 
 move_raquete_cima_fim:
@@ -51,13 +56,13 @@ move_raquete_baixo:
     CALL desenha_raquete        ; Apaga a raquete atual
 
     MOV AX, [SI+2]              ; Y1 (Coordenada inferior)
-    SUB AX, 5
+    SUB AX, 2
     CMP AX, 0
     JL move_raquete_baixo_fim   ; Se ultrapassar o limite, sai
     MOV [SI+2], AX              ; Atualiza Y1
 
     MOV AX, [SI+6]              ; Y2
-    SUB AX, 5
+    SUB AX, 2
     MOV [SI+6], AX              ; Atualiza Y2
 
 move_raquete_baixo_fim:

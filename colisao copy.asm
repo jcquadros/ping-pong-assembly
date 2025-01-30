@@ -1,5 +1,5 @@
 global verifica_colisao, inverter_direcao_x, inverter_direcao_y
-extern line, rectangle, cor, j1_blocos, j2_blocos, j1_raquete, j2_raquete, j1_status, j2_status, ball_x, ball_y, ball_radius, direction_x, direction_y, game_over, cor
+extern line, rectangle, cor, j1_blocos, j2_blocos, j1_raquete, j2_raquete, j1_status, j2_status, ball_x, ball_y, ball_radius, direction_x, direction_y, tela_game_over, cor
 
 inverter_direcao_x:
 	NEG word [direction_x]             ; Inverte a direção em X
@@ -31,7 +31,7 @@ verifica_colisao_esquerda:
     SUB AX, BX                  		; Posição da bola - Raio
     CMP AX, 0
 	JNL verifica_colisao_direita 		; Se não colidiu com a lateral esquerda, verifica a direita
-	JMP game_over						; Para o jogo em caso de colisão com a lateral
+	JMP tela_game_over						; Para o jogo em caso de colisão com a lateral
     
 verifica_colisao_direita:
     ; Verifica colisão com a borda lateral direita
@@ -39,7 +39,7 @@ verifica_colisao_direita:
     ADD AX, [ball_radius]
     CMP AX, 639
 	JNG verifica_colisao_raquete_j1 			; Se não colidiu com a lateral direita, verifica os blocos do Jogador 1
-	JMP game_over						; Para o jogo em caso de colisão com a lateral
+	JMP tela_game_over						; Para o jogo em caso de colisão com a lateral
 
 verifica_colisao_raquete_j1:
     ; Verifica colisão com a raquete do Jogador 1

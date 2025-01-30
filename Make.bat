@@ -1,3 +1,4 @@
+CALL NASM mensagem
 CALL NASM main
 CALL NASM line
 CALL NASM fcircle
@@ -11,6 +12,6 @@ CALL NASM jogador
 CALL NASM bola
 CALL NASM colisao
 CALL NASM tela
-CALL FREELINK main line fcircle circle cursor caracter plot_xy rect frect jogador bola colisao tela
+CALL FREELINK main line fcircle circle cursor caracter plot_xy rect frect jogador bola colisao tela mensagem
 
 
