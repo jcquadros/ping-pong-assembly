@@ -34,7 +34,11 @@ segment code
 
 tela_inicial:
 	; Configura gráficos iniciais
+	CMP byte [opcao], 0
+	MOV byte [cor], branco_intenso  ; Definir cor antes da chamada
+	JE primeira_msg
 	MOV byte [cor], verde  ; Definir cor antes da chamada
+primeira_msg:
 	MOV AX, 13				;Linha
 	PUSH AX 
 	MOV AX, 35				;Coluna
@@ -43,7 +47,11 @@ tela_inicial:
 	PUSH SI
     CALL escreve_mensagem
 	
+	CMP byte [opcao], 1
+	MOV byte [cor], branco_intenso  ; Definir cor antes da chamada
+	JE segunda_msg
 	MOV byte [cor], amarelo
+segunda_msg:
 	MOV AX, 14				;Linha
 	PUSH AX
 	MOV AX, 35				;Coluna
@@ -51,8 +59,12 @@ tela_inicial:
 	MOV SI, mensagem_médio
 	PUSH SI
 	CALL escreve_mensagem
-	
+
+	CMP byte [opcao], 2
+	MOV byte [cor], branco_intenso  ; Definir cor antes da chamada	
+	JE terceira_msg
 	MOV byte [cor], vermelho
+terceira_msg:
 	MOV AX, 15				;Linha
 	PUSH AX
 	MOV AX, 35				;Coluna
@@ -60,9 +72,7 @@ tela_inicial:
 	MOV SI, mensagem_difícil
 	PUSH SI
 	CALL escreve_mensagem
-	
-
-navega_tela_inicial:
+		
 	MOV byte [cor], branco_intenso
 	CALL desenha_opcao_cursor
 
@@ -70,7 +80,7 @@ navega_tela_inicial:
 	CALL verifica_se_tecla_pressionada	
 	MOV  AL, byte [estado_jogo]
 	CMP AL, estado_inicial
-	JE navega_tela_inicial
+	JE tela_inicial
 	MOV BL, estado_inicial
 	JMP navega_entre_telas
 
