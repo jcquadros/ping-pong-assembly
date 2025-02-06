@@ -132,7 +132,6 @@ colisao_bloco_y:
     ; Marca bloco como destruído, pinta de preto e inverte direção
     MOV byte [DI], 0
     CALL desenha_bloco  ; SI contém o endereço do bloco
-    CALL rectangle
     CALL inverter_direcao_y
 
 avanca_proximo_bloco:
