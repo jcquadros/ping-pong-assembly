@@ -1,4 +1,4 @@
-extern line, circle, full_circle, cursor, caracter, rectangle,full_rectangle, desenha_bordas , desenha_blocos, desenha_raquete, move_raquete_cima, move_raquete_baixo, desenha_bola, verifica_colisao, escreve_mensagem
+extern line, circle, full_circle, cursor, caracter, rectangle,full_rectangle, desenha_bordas , desenha_blocos, desenha_blocos_coloridos, desenha_raquete, move_raquete_cima, move_raquete_baixo, desenha_bola, verifica_colisao, escreve_mensagem
 global cor,  j1_blocos, j2_blocos, j1_raquete, j2_raquete, ball_x, ball_y, ball_radius, direction_x, direction_y, j1_status, j2_status, game_over, deltax, deltay, mens
 
 segment code
@@ -87,14 +87,12 @@ terceira_msg:
 tela_jogo:
 	MOV byte [cor], branco_intenso
 	CALL desenha_bordas
-	MOV byte [cor], magenta
 	MOV SI, j1_blocos
 	MOV DI, j1_status
-	CALL desenha_blocos
-	MOV byte [cor], azul
+	CALL desenha_blocos_coloridos
 	MOV SI, j2_blocos
 	MOV DI, j2_status
-	CALL desenha_blocos
+	CALL desenha_blocos_coloridos
 	
 
 ; Loop da animacao da bolinha na tela		
@@ -117,7 +115,7 @@ animacao_loop:
 
 	; Desenha o novo círculo
 	MOV byte [cor], vermelho
-	CALL desenha_bola          		
+	CALL desenha_bola  
 	
 	; Desenha as raquetes
 	MOV byte [cor], magenta
@@ -125,7 +123,7 @@ animacao_loop:
 	CALL desenha_raquete
 	MOV byte [cor], azul
 	MOV SI, j2_raquete
-	CALL desenha_raquete
+	CALL desenha_raquete        		
 	
 	CALL verifica_se_tecla_pressionada
     CALL delay
@@ -574,7 +572,6 @@ apaga_tudo:
 	RET
 ;*******************************************************************
 segment data
-
 cor		db		branco_intenso
 							; I R G B COR
 preto			equ		0	; 0 0 0 0 pRETo
