@@ -23,11 +23,16 @@ Este é o projeto de um jogo de Ping Pong desenvolvido como parte de um trabalho
         ```
 4. **Extraia o compilador**:
     - Extraia o arquivo ZIP do compilador dentro da pasta do repositório clonado.
-5. **Compile o jogo**:
+5. **Compile o jogo (opcional)**:
     - No terminal do DOSBox, dentro do diretório do repositório, execute o comando:
         ```
         make
         ```
+6. **Execute o jogo**
+    - Caso nao queira compilar o jogo o arquivo executável já se encontra no repositório. Para executar o jogo basta executar o comando:
+    ```
+    main
+    ```
 
 ## Como Jogar
 
