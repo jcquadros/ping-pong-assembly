@@ -1,4 +1,5 @@
 # Jogo de Ping Pong
+Grupo: GUSTAVO BREDA SARTI, JULLIE DE CASTRO QUADROS, JOSÉ VITOR RODRIGUES ZORZAL
 
 Este é o projeto de um jogo de Ping Pong desenvolvido como parte de um trabalho acadêmico. O objetivo é quebrar os blocos do contrincante e não deixar a bolinha sair da tela, evitando que ela ultrapasse as laterais. O jogo inclui diferentes níveis de dificuldade, controles para movimentação das raquetes e uma interface interativa.
 
